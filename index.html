@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Code Arena — тренажёр задач Python</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <style>
+    :root {
+      --bg: #070714;
+      --bg-2: #0d0d24;
+      --panel: rgba(255, 255, 255, 0.07);
+      --panel-2: rgba(255, 255, 255, 0.11);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #f4f7ff;
+      --muted: #a8b1d4;
+      --purple: #9b5cff;
+      --blue: #37a5ff;
+      --green: #37f59b;
+      --orange: #ffb84d;
+      --red: #ff4d7d;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(155, 92, 255, 0.34), transparent 30%),
+        radial-gradient(circle at 85% 15%, rgba(55, 165, 255, 0.22), transparent 32%),
+        radial-gradient(circle at 50% 90%, rgba(55, 245, 155, 0.11), transparent 28%),
+        linear-gradient(135deg, #050511, #0b0b23 45%, #080815);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.2));
+      z-index: -2;
+    }
+
+    .orb {
+      position: fixed;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      filter: blur(48px);
+      opacity: .2;
+      z-index: -1;
+      animation: float 9s ease-in-out infinite alternate;
+    }
+    .orb.one { left: -120px; top: 220px; background: var(--purple); }
+    .orb.two { right: -120px; top: 520px; background: var(--blue); animation-delay: 1.5s; }
+    .orb.three { left: 40%; bottom: -180px; background: var(--green); animation-delay: 2.5s; }
+
+    @keyframes float {
+      from { transform: translate3d(0, 0, 0) scale(1); }
+      to { transform: translate3d(24px, -32px, 0) scale(1.1); }
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, textarea, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(22px);
+      background: rgba(7, 7, 20, 0.72);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      font-size: 20px;
+    }
+
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      box-shadow: 0 0 32px rgba(155, 92, 255, .45);
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .nav-links a { transition: .2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      color: white;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      box-shadow: 0 12px 35px rgba(55, 165, 255, .22);
+      transition: .22s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 18px 45px rgba(155, 92, 255, .33); }
+    .btn.secondary {
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    .btn.green { background: linear-gradient(135deg, #18c978, var(--green)); color: #02110a; }
+    .btn.red { background: linear-gradient(135deg, #ff3974, #ff8a4d); }
+    .btn.small { padding: 9px 12px; font-size: 13px; }
+
+    .hero {
+      min-height: 760px;
+      display: grid;
+      grid-template-columns: 1fr .95fr;
+      gap: 46px;
+      align-items: center;
+      padding: 70px 0 50px;
+    }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: clamp(44px, 7vw, 86px);
+      line-height: .93;
+      margin: 0 0 24px;
+      letter-spacing: -.075em;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #fff, #bda2ff 38%, #6cc8ff 68%, #6affbd);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.7;
+      max-width: 680px;
+      margin: 0 0 28px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 34px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stat, .card, .trainer-panel, .progress-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+    .stat { padding: 18px; }
+    .stat strong { display: block; font-size: 24px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .code-window {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: rgba(5, 5, 17, .86);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 30px 100px rgba(0,0,0,.55), 0 0 80px rgba(155,92,255,.18);
+    }
+    .code-window::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, rgba(155,92,255,.55), transparent, rgba(55,245,155,.35));
+      z-index: -1;
+    }
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.06);
+      border-bottom: 1px solid var(--border);
+    }
+    .dots { display: flex; gap: 8px; }
+    .dots span { width: 12px; height: 12px; border-radius: 50%; display: block; }
+    .dots span:nth-child(1) { background: #ff5f57; }
+    .dots span:nth-child(2) { background: #ffbd2e; }
+    .dots span:nth-child(3) { background: #28c840; }
+    pre {
+      margin: 0;
+      padding: 26px;
+      color: #d9e7ff;
+      font-family: "JetBrains Mono", monospace;
+      line-height: 1.7;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .code-badges { position: absolute; right: 18px; bottom: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+    section { padding: 76px 0; }
+    .section-title { font-size: clamp(32px, 4vw, 54px); letter-spacing: -.055em; margin: 0 0 14px; }
+    .section-subtitle { color: var(--muted); font-size: 17px; line-height: 1.7; margin: 0 0 32px; max-width: 760px; }
+
+    .level-grid, .achievement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card { padding: 24px; transition: .22s; position: relative; overflow: hidden; }
+    .card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,.28); }
+    .card h3 { font-size: 24px; margin: 0 0 10px; }
+    .card p, .card li { color: var(--muted); line-height: 1.65; }
+    .card ul { padding-left: 18px; margin-bottom: 22px; }
+    .level-easy { box-shadow: inset 0 0 70px rgba(55,245,155,.08), var(--shadow); }
+    .level-medium { box-shadow: inset 0 0 70px rgba(255,184,77,.08), var(--shadow); }
+    .level-hard { box-shadow: inset 0 0 70px rgba(255,77,125,.08), var(--shadow); }
+
+    .trainer {
+      display: grid;
+      grid-template-columns: 290px 1fr 1.15fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .trainer-panel { min-height: 640px; overflow: hidden; }
+    .panel-head {
+      padding: 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-head h3 { margin: 0; font-size: 17px; }
+    .py-status {
+      font-size: 12px;
+      color: var(--orange);
+      border: 1px solid rgba(255,184,77,.35);
+      background: rgba(255,184,77,.08);
+      padding: 7px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .py-status.ready { color: var(--green); border-color: rgba(55,245,155,.35); background: rgba(55,245,155,.08); }
+    .panel-body { padding: 18px; }
+
+    .filters { display: grid; gap: 10px; margin-bottom: 14px; }
+    .input, .select {
+      width: 100%;
+      background: rgba(0,0,0,.24);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 13px;
+      outline: none;
+    }
+    .input:focus, .select:focus, textarea:focus { border-color: rgba(155,92,255,.65); box-shadow: 0 0 0 4px rgba(155,92,255,.12); }
+    .task-list { display: grid; gap: 9px; max-height: 485px; overflow: auto; padding-right: 4px; }
+    .task-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,.045);
+      transition: .18s;
+    }
+    .task-item:hover, .task-item.active { background: rgba(155,92,255,.16); border-color: rgba(155,92,255,.48); }
+    .task-title { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+    .task-meta { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+    .pill { font-size: 11px; font-weight: 900; padding: 5px 8px; border-radius: 999px; border: 1px solid var(--border); }
+    .Easy { color: var(--green); background: rgba(55,245,155,.08); border-color: rgba(55,245,155,.22); }
+    .Medium { color: var(--orange); background: rgba(255,184,77,.08); border-color: rgba(255,184,77,.22); }
+    .Hard { color: var(--red); background: rgba(255,77,125,.08); border-color: rgba(255,77,125,.22); }
+    .solved { color: var(--green); }
+
+    .problem h2 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.04em; }
+    .problem p { color: var(--muted); line-height: 1.7; }
+    .example, .hint-box, .solution-box {
+      background: rgba(0,0,0,.22);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin: 12px 0;
+      color: #dce6ff;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow: auto;
+    }
+    .hint-box, .solution-box { display: none; white-space: pre-wrap; }
+
+    .editor-wrap {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      background: rgba(1, 3, 14, .78);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      min-height: 375px;
+    }
+    .line-numbers {
+      padding: 18px 10px;
+      text-align: right;
+      color: rgba(255,255,255,.32);
+      background: rgba(255,255,255,.035);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      user-select: none;
+      overflow: hidden;
+    }
+    textarea.code-editor {
+      width: 100%;
+      min-height: 375px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #e8f0ff;
+      padding: 18px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      line-height: 1.65;
+      tab-size: 4;
+    }
+    .editor-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    .console {
+      margin-top: 14px;
+      background: rgba(0,0,0,.31);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      max-height: 260px;
+      overflow: auto;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .test-row { padding: 10px; border-radius: 12px; margin: 8px 0; background: rgba(255,255,255,.045); border: 1px solid var(--border); }
+    .pass { color: var(--green); }
+    .fail { color: #ff7a9c; }
+
+    .progress-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .progress-card { padding: 22px; }
+    .progress-card strong { display: block; font-size: 32px; margin-bottom: 6px; }
+    .progress-card span { color: var(--muted); }
+    .bar { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+    .bar div { height: 100%; width: 0%; border-radius: inherit; background: linear-gradient(90deg, var(--purple), var(--green)); transition: .4s; }
+
+    .achievements { margin-top: 24px; }
+    .achievement-grid { grid-template-columns: repeat(5, 1fr); }
+    .achievement {
+      opacity: .45;
+      padding: 18px;
+      min-height: 134px;
+    }
+    .achievement.unlocked { opacity: 1; border-color: rgba(55,245,155,.32); box-shadow: inset 0 0 40px rgba(55,245,155,.08), var(--shadow); }
+    .achievement .icon { font-size: 30px; margin-bottom: 8px; }
+    .achievement h4 { margin: 0 0 8px; font-size: 15px; }
+    .achievement p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 100;
+      background: rgba(14, 18, 36, .92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      transform: translateY(30px);
+      opacity: 0;
+      transition: .25s;
+      max-width: min(360px, calc(100vw - 36px));
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    .footer { padding: 46px 0; color: var(--muted); border-top: 1px solid var(--border); }
+
+    @media (max-width: 1050px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .trainer { grid-template-columns: 1fr; }
+      .trainer-panel { min-height: auto; }
+      .task-list { max-height: 360px; }
+      .level-grid, .progress-grid { grid-template-columns: repeat(2, 1fr); }
+      .achievement-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .nav-links { display: none; }
+      .nav { height: 66px; }
+      .hero { padding-top: 42px; }
+      .stats, .level-grid, .progress-grid, .achievement-grid { grid-template-columns: 1fr; }
+      .panel-head { align-items: flex-start; flex-direction: column; }
+      .editor-actions, .hero-actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+  <div class="orb three"></div>
+
+  <header class="header">
+    <div class="container nav">
+      <a class="logo" href="#top"><span class="logo-mark">Py</span><span>Python Code Arena</span></a>
+      <nav class="nav-links">
+        <a href="#levels">Уровни</a>
+        <a href="#trainer">Тренажёр</a>
+        <a href="#progress">Прогресс</a>
+        <a href="#why">Почему Python</a>
+      </nav>
+      <a class="btn small" href="#trainer">Начать решать</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="container hero">
+      <div>
+        <div class="badge-row">
+          <span class="badge">⚡ Python прямо в браузере</span>
+          <span class="badge">🧪 Автопроверка тестов</span>
+          <span class="badge">🏆 XP и достижения</span>
+        </div>
+        <h1><span class="gradient-text">Решай задачи по Python</span> и прокачивай алгоритмы</h1>
+        <p class="lead">Выбирай уровень сложности, пиши код, запускай тесты и смотри результат. Всё работает в одном HTML-файле без сервера через Pyodide.</p>
+        <div class="hero-actions">
+          <a href="#trainer" class="btn green">Начать с Easy</a>
+          <a href="#levels" class="btn secondary">Посмотреть уровни</a>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="statTasks">9</strong><span>задач</span></div>
+          <div class="stat"><strong>3</strong><span>уровня</span></div>
+          <div class="stat"><strong id="statSolvedHero">0</strong><span>решено</span></div>
+          <div class="stat"><strong id="statXpHero">0</strong><span>XP</span></div>
+        </div>
+      </div>
+      <div class="code-window">
+        <div class="code-head"><div class="dots"><span></span><span></span><span></span></div><span class="badge">solve.py</span></div>
+        <pre><code>def solve(nums):
+    best = 0
+    current = 0
+
+    for num in nums:
+        if num == 1:
+            current += 1
+            best = max(best, current)
+        else:
+            current = 0
+
+    return best</code></pre>
+        <div class="code-badges"><span class="pill Easy">Easy</span><span class="pill">Python</span><span class="pill">Auto-check</span></div>
+      </div>
+    </section>
+
+    <section class="container" id="levels">
+      <h2 class="section-title">Выбери уровень</h2>
+      <p class="section-subtitle">Начни с простых задач и постепенно переходи к алгоритмам, которые встречаются на олимпиадах, экзаменах и собеседованиях.</p>
+      <div class="level-grid">
+        <div class="card level-easy">
+          <span class="pill Easy">Easy · 3 задачи</span>
+          <h3>Лёгкий уровень</h3>
+          <p>Для новичков: условия, циклы, списки, строки, функции.</p>
+          <ul><li>Максимум единиц подряд</li><li>Сумма массива</li><li>Пересечение массивов</li></ul>
+          <a class="btn small green" href="#trainer" onclick="setFilterFromButton('Easy')">Решать Easy</a>
+        </div>
+        <div class="card level-medium">
+          <span class="pill Medium">Medium · 3 задачи</span>
+          <h3>Средний уровень</h3>
+          <p>Словари, стек, бинарный поиск, массивы и строки.</p>
+          <ul><li>Произведение кроме себя</li><li>Удаление звёздочек</li><li>Бинарный поиск</li></ul>
+          <a class="btn small" href="#trainer" onclick="setFilterFromButton('Medium')">Решать Medium</a>
+        </div>
+        <div class="card level-hard">
+          <span class="pill Hard">Hard · 3 задачи</span>
+          <h3>Сложный уровень</h3>
+          <p>Динамика, жадные идеи, подмассивы и оптимизация.</p>
+          <ul><li>Фибоначчи</li><li>Минимум монет</li><li>Максимальный подмассив</li></ul>
+          <a class="btn small red" href="#trainer" onclick="setFilterFromButton('Hard')">Бросить вызов</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="trainer">
+      <h2 class="section-title">Тренажёр задач</h2>
+      <p class="section-subtitle">Пиши функцию <b>solve</b>, запускай код и проходи тесты. Прогресс сохраняется в localStorage твоего браузера.</p>
+
+      <div class="trainer">
+        <aside class="trainer-panel">
+          <div class="panel-head"><h3>Задачи</h3><span id="pyStatus" class="py-status">Загружаем Python...</span></div>
+          <div class="panel-body">
+            <div class="filters">
+              <input class="input" id="searchInput" placeholder="Поиск задачи..." />
+              <select class="select" id="difficultyFilter">
+                <option value="All">Все уровни</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+            <div class="task-list" id="taskList"></div>
+          </div>
+        </aside>
+
+        <section class="trainer-panel problem">
+          <div class="panel-head"><h3>Условие</h3><span id="problemBadge" class="pill Easy">Easy</span></div>
+          <div class="panel-body">
+            <h2 id="taskTitle"></h2>
+            <div class="badge-row" style="margin-bottom: 8px;"><span class="badge" id="taskTopic"></span><span class="badge" id="taskFunction"></span></div>
+            <p id="taskDescription"></p>
+            <h3>Примеры</h3>
+            <div id="examples"></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+              <button class="btn secondary small" id="hintBtn">Показать подсказку</button>
+              <button class="btn secondary small" id="solutionBtn">Показать решение</button>
+            </div>
+            <div class="hint-box" id="hintBox"></div>
+            <div class="solution-box" id="solutionBox"></div>
+          </div>
+        </section>
+
+        <section class="trainer-panel">
+          <div class="panel-head"><h3>Редактор Python</h3><span class="badge">def solve(...)</span></div>
+          <div class="panel-body">
+            <div class="editor-wrap">
+              <div class="line-numbers" id="lineNumbers">1</div>
+              <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+            </div>
+            <div class="editor-actions">
+              <button class="btn green" id="runBtn">▶ Проверить решение</button>
+              <button class="btn secondary" id="copyBtn">Скопировать</button>
+              <button class="btn secondary" id="resetBtn">Сбросить код</button>
+            </div>
+            <div class="console" id="console">Здесь появятся результаты тестов.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="container" id="progress">
+      <h2 class="section-title">Твой прогресс</h2>
+      <p class="section-subtitle">Решай задачи, получай XP и открывай достижения. Easy = 10 XP, Medium = 25 XP, Hard = 50 XP.</p>
+      <div class="progress-grid">
+        <div class="progress-card"><strong id="solvedCount">0/9</strong><span>решено задач</span><div class="bar"><div id="solvedBar"></div></div></div>
+        <div class="progress-card"><strong id="xpCount">0</strong><span>опыта XP</span><div class="bar"><div id="xpBar"></div></div></div>
+        <div class="progress-card"><strong id="levelCount">1</strong><span>уровень профиля</span><div class="bar"><div id="levelBar"></div></div></div>
+        <div class="progress-card"><strong id="runCount">0</strong><span>запусков кода</span><div class="bar"><div id="runBar"></div></div></div>
+      </div>
+
+      <div class="achievements">
+        <h3>Достижения</h3>
+        <div class="achievement-grid" id="achievementGrid"></div>
+        <button class="btn secondary" id="resetProgressBtn" style="margin-top:18px;">Сбросить прогресс</button>
+      </div>
+    </section>
+
+    <section class="container" id="why">
+      <div class="card">
+        <h2 class="section-title">Почему Python?</h2>
+        <p class="section-subtitle">Python хорошо подходит для старта: у него простой синтаксис, его удобно использовать для алгоритмов, автоматизации, анализа данных и AI. Здесь можно спокойно тренироваться: написал функцию, запустил тесты, увидел ошибку и улучшил решение.</p>
+        <a class="btn green" href="#trainer">Открыть первую задачу</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">© 2026 Python Code Arena. Учебный мини-тренажёр Python в одном HTML-файле.</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const tasks = [
+      {
+        id: 1,
+        title: "Максимальное количество единиц подряд",
+        difficulty: "Easy",
+        topic: "Массивы",
+        functionName: "solve(nums)",
+        compareMode: "normal",
+        description: "Дан список nums из 0 и 1. Верните максимальное количество подряд идущих единиц.",
+        examples: [{ input: "[1, 1, 0, 1, 1, 1]", output: "3" }],
+        starterCode: `def solve(nums):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[1,1,0,1,1,1]], expected: 3 },
+          { input: [[1,0,1,1,0,1]], expected: 2 },
+          { input: [[0,0,0]], expected: 0 }
+        ],
+        hint: "Создай счётчик текущей серии единиц и переменную для максимума.",
+        solution: `def solve(nums):\n    count = 0\n    max_count = 0\n\n    for num in nums:\n        if num == 1:\n            count += 1\n            max_count = max(max_count, count)\n        else:\n            count = 0\n\n    return max_count`
+      },
+      {
+        id: 2,
+        title: "Сумма элементов массива",
+        difficulty: "Easy",
+        topic: "Списки",
+        functionName: "solve(nums)",
+        compareMode: "normal",
+        description: "Дан список чисел nums. Верните сумму всех элементов списка.",
+        examples: [{ input: "[1, 2, 3]", output: "6" }],
+        starterCode: `def solve(nums):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[1,2,3]], expected: 6 },
+          { input: [[-1,5,2]], expected: 6 },
+          { input: [[]], expected: 0 }
+        ],
+        hint: "Можно использовать цикл for или встроенную функцию sum.",
+        solution: `def solve(nums):\n    total = 0\n    for num in nums:\n        total += num\n    return total`
+      },
+      {
+        id: 3,
+        title: "Пересечение двух массивов",
+        difficulty: "Easy",
+        topic: "Множества",
+        functionName: "solve(nums1, nums2)",
+        compareMode: "unorderedArray",
+        description: "Даны два списка nums1 и nums2. Верните список уникальных элементов, которые есть в обоих списках. Порядок не важен.",
+        examples: [{ input: "[1,2,2,1], [2,2]", output: "[2]" }],
+        starterCode: `def solve(nums1, nums2):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[1,2,2,1], [2,2]], expected: [2] },
+          { input: [[4,9,5], [9,4,9,8,4]], expected: [4,9] },
+          { input: [[1,2,3], [4,5,6]], expected: [] }
+        ],
+        hint: "Используй set, чтобы убрать повторы и быстро найти общие элементы.",
+        solution: `def solve(nums1, nums2):\n    return list(set(nums1) & set(nums2))`
+      },
+      {
+        id: 4,
+        title: "Произведение массива кроме себя",
+        difficulty: "Medium",
+        topic: "Префиксы и суффиксы",
+        functionName: "solve(nums)",
+        compareMode: "normal",
+        description: "Дан список nums. Верните список answer, где answer[i] равен произведению всех элементов nums, кроме nums[i]. Деление использовать нельзя.",
+        examples: [{ input: "[1, 2, 3, 4]", output: "[24, 12, 8, 6]" }],
+        starterCode: `def solve(nums):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[1,2,3,4]], expected: [24,12,8,6] },
+          { input: [[-1,1,0,-3,3]], expected: [0,0,9,0,0] },
+          { input: [[2,3]], expected: [3,2] }
+        ],
+        hint: "Сначала пройди слева направо и запиши произведения слева. Потом справа налево домножь на произведения справа.",
+        solution: `def solve(nums):\n    n = len(nums)\n    answer = [1] * n\n\n    left = 1\n    for i in range(n):\n        answer[i] = left\n        left *= nums[i]\n\n    right = 1\n    for i in range(n - 1, -1, -1):\n        answer[i] *= right\n        right *= nums[i]\n\n    return answer`
+      },
+      {
+        id: 5,
+        title: "Удаление звёздочек из строки",
+        difficulty: "Medium",
+        topic: "Стек",
+        functionName: "solve(s)",
+        compareMode: "normal",
+        description: "Дана строка s из строчных букв и символов *. Каждая звёздочка удаляет ближайшую букву слева. Верните итоговую строку.",
+        examples: [{ input: "prog*ram**mer", output: "prormer" }],
+        starterCode: `def solve(s):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: ["prog*ram**mer"], expected: "prormer" },
+          { input: ["erase*****"], expected: "" },
+          { input: ["abc*d"], expected: "abd" }
+        ],
+        hint: "Используй список как стек: буквы добавляй, при * удаляй последний символ.",
+        solution: `def solve(s):\n    stack = []\n\n    for ch in s:\n        if ch == '*':\n            stack.pop()\n        else:\n            stack.append(ch)\n\n    return ''.join(stack)`
+      },
+      {
+        id: 6,
+        title: "Бинарный поиск",
+        difficulty: "Medium",
+        topic: "Поиск",
+        functionName: "solve(nums, target)",
+        compareMode: "normal",
+        description: "Дан отсортированный список nums и число target. Верните индекс target или -1, если числа нет.",
+        examples: [{ input: "[-1,0,3,5,9,12], 9", output: "4" }],
+        starterCode: `def solve(nums, target):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[-1,0,3,5,9,12], 9], expected: 4 },
+          { input: [[-1,0,3,5,9,12], 2], expected: -1 },
+          { input: [[5], 5], expected: 0 }
+        ],
+        hint: "Держи левую и правую границу. Каждый раз проверяй середину.",
+        solution: `def solve(nums, target):\n    left = 0\n    right = len(nums) - 1\n\n    while left <= right:\n        mid = (left + right) // 2\n\n        if nums[mid] == target:\n            return mid\n        elif nums[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n\n    return -1`
+      },
+      {
+        id: 7,
+        title: "Число Фибоначчи через динамику",
+        difficulty: "Hard",
+        topic: "Динамическое программирование",
+        functionName: "solve(n)",
+        compareMode: "normal",
+        description: "Верните n-е число Фибоначчи. F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2).",
+        examples: [{ input: "10", output: "55" }],
+        starterCode: `def solve(n):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [2], expected: 1 },
+          { input: [3], expected: 2 },
+          { input: [10], expected: 55 },
+          { input: [0], expected: 0 }
+        ],
+        hint: "Храни только два последних числа: prev и cur.",
+        solution: `def solve(n):\n    if n <= 1:\n        return n\n\n    prev = 0\n    cur = 1\n\n    for _ in range(2, n + 1):\n        prev, cur = cur, prev + cur\n\n    return cur`
+      },
+      {
+        id: 8,
+        title: "Минимальное количество монет",
+        difficulty: "Hard",
+        topic: "Динамическое программирование",
+        functionName: "solve(coins, amount)",
+        compareMode: "normal",
+        description: "Даны номиналы монет coins и сумма amount. Верните минимальное количество монет для набора суммы или -1, если это невозможно.",
+        examples: [{ input: "[1,2,5], 11", output: "3" }],
+        starterCode: `def solve(coins, amount):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[1,2,5], 11], expected: 3 },
+          { input: [[2], 3], expected: -1 },
+          { input: [[1], 0], expected: 0 },
+          { input: [[1,3,4], 6], expected: 2 }
+        ],
+        hint: "dp[x] — минимальное число монет для суммы x. Начни с бесконечности.",
+        solution: `def solve(coins, amount):\n    INF = amount + 1\n    dp = [INF] * (amount + 1)\n    dp[0] = 0\n\n    for x in range(1, amount + 1):\n        for coin in coins:\n            if x - coin >= 0:\n                dp[x] = min(dp[x], dp[x - coin] + 1)\n\n    return dp[amount] if dp[amount] != INF else -1`
+      },
+      {
+        id: 9,
+        title: "Максимальная сумма подмассива",
+        difficulty: "Hard",
+        topic: "Алгоритм Кадане",
+        functionName: "solve(nums)",
+        compareMode: "normal",
+        description: "Дан список nums. Найдите непрерывный подмассив с наибольшей суммой и верните эту сумму.",
+        examples: [{ input: "[-2,1,-3,4,-1,2,1,-5,4]", output: "6" }],
+        starterCode: `def solve(nums):\n    # напишите код здесь\n    pass`,
+        tests: [
+          { input: [[-2,1,-3,4,-1,2,1,-5,4]], expected: 6 },
+          { input: [[1]], expected: 1 },
+          { input: [[5,4,-1,7,8]], expected: 23 },
+          { input: [[-3,-2,-5]], expected: -2 }
+        ],
+        hint: "На каждом элементе решай: продолжать старую сумму или начать новый подмассив с текущего числа.",
+        solution: `def solve(nums):\n    current_sum = nums[0]\n    max_sum = nums[0]\n\n    for i in range(1, len(nums)):\n        current_sum = max(nums[i], current_sum + nums[i])\n        max_sum = max(max_sum, current_sum)\n\n    return max_sum`
+      }
+    ];
+
+    const achievements = [
+      { id: "firstRun", icon: "🚀", title: "Первый запуск", desc: "Запусти код хотя бы один раз" },
+      { id: "firstSolved", icon: "✅", title: "Первая задача", desc: "Реши первую задачу" },
+      { id: "easy3", icon: "🐍", title: "Новичок Python", desc: "Реши 3 Easy-задачи" },
+      { id: "fiveSolved", icon: "🧠", title: "Алгоритмист", desc: "Реши 5 задач" },
+      { id: "hardSolved", icon: "🔥", title: "Сложный уровень", desc: "Реши первую Hard-задачу" }
+    ];
+
+    let pyodide = null;
+    let currentTask = tasks[0];
+    let progress = loadProgress();
+
+    const el = (id) => document.getElementById(id);
+    const taskList = el("taskList");
+    const codeEditor = el("codeEditor");
+    const lineNumbers = el("lineNumbers");
+    const consoleBox = el("console");
+
+    function loadProgress() {
+      const saved = localStorage.getItem("pythonCodeArenaProgress");
+      if (saved) return JSON.parse(saved);
+      return { solved: [], xp: 0, runs: 0, achievements: [] };
+    }
+
+    function saveProgress() {
+      localStorage.setItem("pythonCodeArenaProgress", JSON.stringify(progress));
+    }
+
+    function toast(message) {
+      const t = el("toast");
+      t.textContent = message;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    function xpFor(task) {
+      return task.difficulty === "Easy" ? 10 : task.difficulty === "Medium" ? 25 : 50;
+    }
+
+    function safeText(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function pretty(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    function arraysEqual(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function compareResults(actual, expected, mode) {
+      if (mode === "unorderedArray") {
+        if (!Array.isArray(actual) || !Array.isArray(expected)) return false;
+        return arraysEqual([...actual].sort(), [...expected].sort());
+      }
+      return arraysEqual(actual, expected);
+    }
+
+    function renderTasks() {
+      const q = el("searchInput").value.toLowerCase().trim();
+      const diff = el("difficultyFilter").value;
+      const filtered = tasks.filter(task => {
+        const byDiff = diff === "All" || task.difficulty === diff;
+        const byText = task.title.toLowerCase().includes(q) || task.topic.toLowerCase().includes(q);
+        return byDiff && byText;
+      });
+
+      taskList.innerHTML = filtered.map(task => {
+        const solved = progress.solved.includes(task.id);
+        return `
+          <button class="task-item ${task.id === currentTask.id ? "active" : ""}" onclick="selectTask(${task.id})">
+            <div class="task-title">${safeText(task.title)}</div>
+            <div class="task-meta">
+              <span class="pill ${task.difficulty}">${task.difficulty}</span>
+              <span class="pill">${safeText(task.topic)}</span>
+              ${solved ? '<span class="pill solved">✓ решена</span>' : '<span class="pill">не решена</span>'}
+            </div>
+          </button>
+        `;
+      }).join("") || '<p style="color: var(--muted);">Задачи не найдены.</p>';
+    }
+
+    function selectTask(id) {
+      currentTask = tasks.find(t => t.id === id);
+      renderCurrentTask();
+      renderTasks();
+      consoleBox.textContent = "Здесь появятся результаты тестов.";
+    }
+
+    function renderCurrentTask() {
+      el("taskTitle").textContent = currentTask.title;
+      el("taskTopic").textContent = "Тема: " + currentTask.topic;
+      el("taskFunction").textContent = "Функция: " + currentTask.functionName;
+      el("taskDescription").textContent = currentTask.description;
+      el("problemBadge").textContent = currentTask.difficulty;
+      el("problemBadge").className = "pill " + currentTask.difficulty;
+      el("examples").innerHTML = currentTask.examples.map(ex => `
+        <div class="example"><b>Ввод:</b> ${safeText(ex.input)}<br><b>Вывод:</b> ${safeText(ex.output)}</div>
+      `).join("");
+      el("hintBox").style.display = "none";
+      el("solutionBox").style.display = "none";
+      el("hintBtn").textContent = "Показать подсказку";
+      el("solutionBtn").textContent = "Показать решение";
+      el("hintBox").textContent = currentTask.hint;
+      el("solutionBox").textContent = currentTask.solution;
+      codeEditor.value = currentTask.starterCode;
+      updateLineNumbers();
+    }
+
+    function updateLineNumbers() {
+      const count = codeEditor.value.split("\n").length;
+      lineNumbers.textContent = Array.from({ length: count }, (_, i) => i + 1).join("\n");
+    }
+
+    function unlockAchievement(id) {
+      if (!progress.achievements.includes(id)) {
+        progress.achievements.push(id);
+        const ach = achievements.find(a => a.id === id);
+        if (ach) toast("Достижение открыто: " + ach.title);
+      }
+    }
+
+    function updateAchievements() {
+      const solvedTasks = tasks.filter(t => progress.solved.includes(t.id));
+      if (progress.runs > 0) unlockAchievement("firstRun");
+      if (solvedTasks.length > 0) unlockAchievement("firstSolved");
+      if (solvedTasks.filter(t => t.difficulty === "Easy").length >= 3) unlockAchievement("easy3");
+      if (solvedTasks.length >= 5) unlockAchievement("fiveSolved");
+      if (solvedTasks.some(t => t.difficulty === "Hard")) unlockAchievement("hardSolved");
+    }
+
+    function renderProgress() {
+      updateAchievements();
+      saveProgress();
+
+      const solvedTotal = progress.solved.length;
+      const level = Math.floor(progress.xp / 100) + 1;
+      el("solvedCount").textContent = `${solvedTotal}/${tasks.length}`;
+      el("xpCount").textContent = progress.xp;
+      el("levelCount").textContent = level;
+      el("runCount").textContent = progress.runs;
+      el("statSolvedHero").textContent = solvedTotal;
+      el("statXpHero").textContent = progress.xp;
+      el("solvedBar").style.width = `${(solvedTotal / tasks.length) * 100}%`;
+      el("xpBar").style.width = `${Math.min(progress.xp, 300) / 300 * 100}%`;
+      el("levelBar").style.width = `${progress.xp % 100}%`;
+      el("runBar").style.width = `${Math.min(progress.runs, 30) / 30 * 100}%`;
+
+      el("achievementGrid").innerHTML = achievements.map(a => `
+        <div class="card achievement ${progress.achievements.includes(a.id) ? "unlocked" : ""}">
+          <div class="icon">${a.icon}</div>
+          <h4>${safeText(a.title)}</h4>
+          <p>${safeText(a.desc)}</p>
+        </div>
+      `).join("");
+    }
+
+    async function initPyodide() {
+      try {
+        pyodide = await loadPyodide();
+        el("pyStatus").textContent = "Python готов";
+        el("pyStatus").classList.add("ready");
+        toast("Python загружен. Можно решать задачи!");
+      } catch (err) {
+        el("pyStatus").textContent = "Ошибка загрузки Python";
+        consoleBox.innerHTML = `<span class="fail">Pyodide не загрузился. Проверь интернет-соединение.</span>`;
+      }
+    }
+
+    async function runTests() {
+      if (!pyodide) {
+        toast("Python ещё загружается");
+        return;
+      }
+
+      progress.runs += 1;
+      unlockAchievement("firstRun");
+      renderProgress();
+
+      consoleBox.innerHTML = "⏳ Запускаем код и проверяем тесты...";
+      const userCode = codeEditor.value;
+      const taskPayload = JSON.stringify(currentTask.tests);
+      const mode = currentTask.compareMode;
+
+      const runner = `
+import json, traceback
+
+user_code = ${JSON.stringify(userCode)}
+tests = json.loads('''${taskPayload}''')
+compare_mode = ${JSON.stringify(mode)}
+namespace = {}
+
+def normalize(value):
+    if isinstance(value, tuple):
+        return [normalize(x) for x in value]
+    if isinstance(value, list):
+        return [normalize(x) for x in value]
+    if isinstance(value, dict):
+        return {str(k): normalize(v) for k, v in value.items()}
+    return value
+
+def compare(actual, expected):
+    actual = normalize(actual)
+    expected = normalize(expected)
+    if compare_mode == 'unorderedArray':
+        if not isinstance(actual, list) or not isinstance(expected, list):
+            return False
+        return sorted(actual) == sorted(expected)
+    return actual == expected
+
+result = {"ok": False, "tests": [], "error": None}
+
+try:
+    exec(user_code, namespace)
+    if 'solve' not in namespace or not callable(namespace['solve']):
+        result['error'] = 'Функция solve не найдена. Убедись, что ты написал def solve(...):'
+    else:
+        solve = namespace['solve']
+        passed = 0
+        for index, test in enumerate(tests, start=1):
+            try:
+                args = test['input']
+                expected = test['expected']
+                actual = solve(*args)
+                is_passed = compare(actual, expected)
+                if is_passed:
+                    passed += 1
+                result['tests'].append({
+                    "index": index,
+                    "passed": is_passed,
+                    "input": args,
+                    "expected": expected,
+                    "actual": normalize(actual),
+                    "error": None
+                })
+            except Exception:
+                result['tests'].append({
+                    "index": index,
+                    "passed": False,
+                    "input": test.get('input'),
+                    "expected": test.get('expected'),
+                    "actual": None,
+                    "error": traceback.format_exc()
+                })
+        result['ok'] = passed == len(tests)
+except Exception:
+    result['error'] = traceback.format_exc()
+
+json.dumps(result, ensure_ascii=False)
+`;
+
+      try {
+        const output = await pyodide.runPythonAsync(runner);
+        const result = JSON.parse(output);
+        renderTestResult(result);
+        if (result.ok) markSolved();
+      } catch (err) {
+        consoleBox.innerHTML = `<span class="fail">Ошибка запуска:</span><br><pre>${safeText(err.message || err)}</pre>`;
+      }
+    }
+
+    function renderTestResult(result) {
+      if (result.error) {
+        consoleBox.innerHTML = `<span class="fail">Код не запустился:</span><br><pre>${safeText(result.error)}</pre>`;
+        return;
+      }
+
+      const passed = result.tests.filter(t => t.passed).length;
+      const total = result.tests.length;
+      let html = result.ok
+        ? `<div class="pass">✅ Все тесты пройдены: ${passed}/${total}</div>`
+        : `<div class="fail">❌ Есть ошибки: ${passed}/${total}</div>`;
+
+      html += result.tests.map(t => `
+        <div class="test-row">
+          <b class="${t.passed ? "pass" : "fail"}">${t.passed ? "✅" : "❌"} Тест ${t.index}</b><br>
+          Ввод: ${safeText(pretty(t.input))}<br>
+          Ожидалось: ${safeText(pretty(t.expected))}<br>
+          Получено: ${safeText(pretty(t.actual))}
+          ${t.error ? `<br><span class="fail">Ошибка:</span><pre>${safeText(t.error)}</pre>` : ""}
+        </div>
+      `).join("");
+
+      consoleBox.innerHTML = html;
+    }
+
+    function markSolved() {
+      if (!progress.solved.includes(currentTask.id)) {
+        progress.solved.push(currentTask.id);
+        progress.xp += xpFor(currentTask);
+        toast(`Задача решена! +${xpFor(currentTask)} XP`);
+      } else {
+        toast("Задача уже была решена ранее");
+      }
+      renderTasks();
+      renderProgress();
+    }
+
+    function setFilterFromButton(level) {
+      el("difficultyFilter").value = level;
+      renderTasks();
+      const first = tasks.find(t => t.difficulty === level);
+      if (first) selectTask(first.id);
+    }
+    window.setFilterFromButton = setFilterFromButton;
+    window.selectTask = selectTask;
+
+    el("searchInput").addEventListener("input", renderTasks);
+    el("difficultyFilter").addEventListener("change", renderTasks);
+    el("runBtn").addEventListener("click", runTests);
+    el("resetBtn").addEventListener("click", () => { codeEditor.value = currentTask.starterCode; updateLineNumbers(); toast("Код сброшен"); });
+    el("copyBtn").addEventListener("click", async () => { await navigator.clipboard.writeText(codeEditor.value); toast("Код скопирован"); });
+    el("hintBtn").addEventListener("click", () => {
+      const box = el("hintBox");
+      const show = box.style.display !== "block";
+      box.style.display = show ? "block" : "none";
+      el("hintBtn").textContent = show ? "Скрыть подсказку" : "Показать подсказку";
+    });
+    el("solutionBtn").addEventListener("click", () => {
+      const box = el("solutionBox");
+      const show = box.style.display !== "block";
+      box.style.display = show ? "block" : "none";
+      el("solutionBtn").textContent = show ? "Скрыть решение" : "Показать решение";
+    });
+    el("resetProgressBtn").addEventListener("click", () => {
+      if (!confirm("Точно сбросить весь прогресс?")) return;
+      progress = { solved: [], xp: 0, runs: 0, achievements: [] };
+      saveProgress();
+      renderTasks();
+      renderProgress();
+      toast("Прогресс сброшен");
+    });
+    codeEditor.addEventListener("input", updateLineNumbers);
+    codeEditor.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const start = codeEditor.selectionStart;
+        const end = codeEditor.selectionEnd;
+        codeEditor.value = codeEditor.value.substring(0, start) + "    " + codeEditor.value.substring(end);
+        codeEditor.selectionStart = codeEditor.selectionEnd = start + 4;
+        updateLineNumbers();
+      }
+    });
+
+    renderCurrentTask();
+    renderTasks();
+    renderProgress();
+    initPyodide();
+  </script>
+</body>
+</html>
